@@ -1,0 +1,149 @@
+import React, { useContext } from "react";
+import { useState, useEffect } from "react";
+import { MovieContext } from "./MovieContext";
+
+function WatchList() {
+
+  const { watchList, setWatchList, handleRemoveFromWatchList } = useContext(MovieContext);
+
+  const GENRE_NAME = {
+    28: "Action",
+    12: "Adventure",
+    16: "Animation",
+    35: "Comedy",
+    80: "Crime",
+    99: "Documentary",
+    18: "Drama",
+    10751: "Family",
+    14: "Fantasy",
+    36: "History",
+    27: "Horror",
+    10402: "Music",
+    9648: "Mystery",
+    10749: "Romance",
+    878: "Sci-Fi",
+    10770: "TV",
+    53: "Thriller",
+    10752: "War",
+    37: "Western",
+  };
+  const [genreList, setGenreList] = useState(["All Genre"]);
+  const [selectedGenre, setSelectedGenre] = useState("All Genre");  
+  const [search, setSearch] = useState("");
+
+  function handleIncrease() {
+    const sorted = watchList.sort(
+      (movieA, movieB) => movieA.vote_average - movieB.vote_average
+    );
+    setWatchList([...sorted]);
+  }
+
+  function handleDecrease() {
+    const sorted = watchList.sort(
+      (movieA, movieB) => movieB.vote_average - movieA.vote_average
+    );
+    setWatchList([...sorted]);
+  }
+
+  function handleSearch(e) {
+    console.log(e.target.value);
+    setSearch(e.target.value);
+  }
+  
+  function handleFilterByGenre(genre) {
+    setSelectedGenre(genre);
+  }
+
+  useEffect(()=>{
+    let temp = watchList.map((movieObj)=>GENRE_NAME[movieObj.genre_ids[0]])
+    temp = new Set(temp);
+    setGenreList(["All Genre",...temp]);
+  },[watchList]) //execute whenever the watchlist is changed as well as on mounting
+
+  return (
+    <>
+      <div className=" flex gap-3 flex-wrap justify-center">
+            {genreList.map((genre)=>{
+              return <div key={genre} onClick={()=>handleFilterByGenre(genre)}
+              className={`h-[3rem] w-[9rem] bg-blue-400 rounded-xl text-white flex justify-center items-center font-bold ${
+                selectedGenre === genre ? "bg-blue-600" : ""
+              }`}
+            >
+              {genre}
+            </div>
+            })}
+      </div>
+
+      <div className="flex justify-center my-4">
+        <input
+          onChange={handleSearch}
+          value={search}
+          className="h-[3rem] w-[18rem] bg-gray-200
+                 outline-none px-4 text-lg "
+          placeholder="Search Movies"
+          type="text"
+        />
+      </div>
+
+      <div className="m-7 overflow-auto rounded-lg border shadow-md	">
+        <table className="p-4 w-full text-center">
+          <thead className=" h-[3rem] bg-gray-50 border-b-2">
+            <tr>
+              <th>Name</th>
+              <th className="flex">
+                <div onClick={handleIncrease} className="p-2">
+                  <i className="fa-solid fa-up-long"></i>
+                </div>
+                <div className="p-2"> Ratings</div>
+                <div onClick={handleDecrease} className="p-2">
+                  <i className="fa-solid fa-down-long"></i>
+                </div>
+              </th>
+              <th>Popularity</th>
+              <th>Genre</th>
+              <th className=" text-red-500">Delete</th>
+            </tr>
+          </thead>
+          <tbody>
+          {watchList
+              .filter(
+                (movieObj) =>
+                  (selectedGenre === "All Genre" ||
+                    GENRE_NAME[movieObj.genre_ids[0]] === selectedGenre) &&
+                  movieObj.title.toLowerCase().includes(search.toLowerCase())
+              )
+              .map((movieObj) => {
+                return (
+                  <tr className=" border-b-2">
+                    <td className="flex items-center mx-4 py-4">
+                      {" "}
+                      <img
+                        className="h-[10rem] w-[8rem]"
+                        src={
+                          "https://image.tmdb.org/t/p/original/" +
+                          movieObj.poster_path
+                        }
+                        alt=""
+                      />
+                      <div className="mx-4">{movieObj.title}</div>
+                    </td>
+                    <td>{movieObj.vote_average}</td>
+                    <td>{movieObj.popularity}</td>
+                    <td>{GENRE_NAME[movieObj.genre_ids[0]]}</td>
+                    <td
+                      onClick={() => handleRemoveFromWatchList(movieObj)}
+                      className=" text-red-500 "
+                    >
+                      <i className="fa-solid fa-trash"></i>
+                    </td>
+                  </tr>
+                );
+              })}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+export default WatchList;
